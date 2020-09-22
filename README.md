@@ -43,7 +43,9 @@ Each section has a commented header that describes what the code below it will d
 ## Ideas for future versions
   - Implement a machine learning algorithm to predict stock prices and trade on those predictions in conjunction with some techincal indicators
   - Trade options with the same criteria - would need a different API
-  - Find a way to scan more than Alpaca's 200 stock limit at one time
+  - Find a way to scan more than Alpaca's 200 stock limit at one time<br>
+  <br>
+This will certainly be a long-term project for me as I look for ways to improve the bot and make it more efficient - if you have any ideas yourself, feel free to submit a pull request or email me at abzdel@bryant.edu. Thank you for your interest!
 
 ## Programs & Packages
 - **Python**: Version 3.7
