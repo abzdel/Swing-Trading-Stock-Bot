@@ -1,0 +1,121 @@
+                                            BIZ BOT - SWING TRADING STOCK BOT
+
+1.0.0 - initially tested 8/17/2020 w/ paper trading
+    - The goal for the first version of this bot was simply to find and purchase stocks that were good buys according to a few technical indicators.
+    - The indicators are as follows:
+      * SMA20 greater than SMA200 (for day of analysis + previous day to indicate the security 'holding' above the confirmation point)
+      * Closing price greater than SMA20 (for day of analysis + previous day to indicate the security 'holding' above the confirmation point)
+    - Things I need to add/change:
+      *SELLING STOCKS*
+        ---* There is no real way to sell the stocks through the Alpaca API; the criteria is there, I just need to complete it
+          ~ This might make more sense as a stop limit or something in the buy function so I don't have to constantly query or stream data checking if I should sell
+      *BUYING STOCKS*
+        ---* Placing orders is *sort of* broken in that it does not stop placing orders once the list is complete
+        * Account buying power is not a good metric to use, I need to find something else in account info
+        * I need a way to make the quantity of my order equal to the amount of money I want to own of each stock, rather than quantity of the stock
+      *OTHER*
+        * Scraping data - run a main() function so I'm not always scraping every time I want to mess with the variables this file creates
+        * Placing orders - run a main() function so I can import variables into other files without placing more orders
+        ---* Change SMA (and maybe RSI) to be more reflective of a short-term trading bot
+      *MAYBE/FUTURE*
+        * More indicators, detect divergence
+        * Sentiment analysis of recent articles on yahoo finance/other platform
+    - NOTE ABOUT THE LOGIC OF THIS VERSION:
+        * The code for SMA should have a certain number of days as null (eg. 199 rows are needed to calculate the 200-day SMA line)
+        * Currently, I don't have a construct that reflects this - SMA keeps calculating for all rows after 200 - even if the values don't mean anything
+        * This is currently okay because I'm only performing analysis on the previous two days of data - but this may cause bugs if I try to analyze those days
+
+        Since I'm only going to pull one row from each stock (previous day's indicators), this is fine.
+        SMA20 values 0-19 are useless (for every stock). I should make them null, but since we only have the one row of
+        stock data in the final dataframe it does not matter. The same applies to SMA200, rsi, and any other
+        indicators that use the previous days' data.
+
+      A perfect dataframe would have 0-19, 200-219, 300-319, etc. as null for SMA20
+
+      If I decide to stream in stock data, this logic might have to change.
+
+
+
+
+New version - initially tested on 8/25/2020: (version 1.1.1)
+    *SELLING STOCKS*
+      -ADDITIONS-
+        - Selling logic has been completed
+        - Checks if there is a stock to sell and if the portfolio has updated to reflect it
+      -IMPROVE-
+        - I should stream in stock data so I can see if the real-time value dips below SMA5 rather than the low
+        - Maybe incorporate current price into the mix w/ a similar contruct to the one minute stock updates in the buy script
+    *BUYING STOCKS*
+      -ADDITIONS
+        - Added a check to see if buy list is empty
+        - Get one minute stock data from the api
+      -IMPROVE
+        - No new ideas at the moment
+    *OTHER*
+      -ADDITIONS
+        - Now running on other laptop in cmd prompt w/ 'biz_bot_final_script'
+          -Uses subprocesses to run files based on conditions
+      -IMPROVE
+        - The subprocesses I use could be cleaned up a bit
+
+
+1.2.1 initially tested on 9/10/2020
+    *SELLING STOCKS*
+      -ADDITIONS-
+        - Scrapes current price from my portfolio (via Alpaca API) to ensure the bot sells if the CURRENT price meets the selling criteria
+        instead of the CLOSING price.
+          - This significantly slows the bot down as I use regular expressions to pull out various data about each stock in order to join
+          it to my other DataFrame. However, it is likely the most efficient workaround available at the moment as it is still fast enough
+          for the logic to work the way it's supposed to.
+      -IMPROVE-
+        - No current ideas for improvements
+    *BUYING STOCKS*
+      -ADDITIONS-
+        - After I scrape all the 'buy' stocks, the 'scrape' script pulls current price from the API (exact same way as in the 'sell' bot)
+        in order to perform one last check.
+          - If the closing price met the buying criteria but the current price does not, it'll be filtered out as it does not have the
+          price swing momentum we're looking for
+          - This is a slow process, but it's faster (and more feasible) than scraping current price for EVERY stock that's being scanned.
+        - Now trading on SMA10 rather than SMA5 - SMA5 was way too volatile - caused lots of day trades
+      -IMPROVE-
+        - Day trades are still happening (albeit not as often as when I was using SMA5). I'm considering adding a construct that 'blacklists'
+        a stock from being sold if it a) was bought today and b) doesn't fall below some farther indicator line (SMA15 or 20). Since I do get
+        four day trades per week, I should allow the bot to use them if I'm taking a huge loss and really need to minimize the damage.
+           - I'm not sure if this will occur in the 'buy' or 'sell' script - maybe I need to have stronger momentum indicators or maybe
+           I should just hold stocks longer before selling
+        - If there is money left over after the first list of stocks is bought, the bot loops back and buys more in the same order as before.
+        I need to think about if this makes sense - my other options are to have the bot just save the money for a different stock with a
+        better RSI (or something else) or buy stocks further down the list to diversify.
+        - Known issue - sometimes the bot doesn't buy a stock that it can very clearly afford. I'm not sure if this is an API speed issue,
+        an issue with the way the os.system script (final script) is running my code, or an issue with the way I developed the equity limit
+        for each stock.
+        - When first stock in the list is above the equity limit or buying power, the bot doesn't buy it because it can't afford it. It should
+        iterate through the stocks to buy what it can afford so there's a minimal amount of stagnant buying power at any given time
+     *OTHER*
+       -ADDITIONS
+         - No more subprocesses - now using os.system to run the scripts back to back
+       -IMPROVE
+         - I want to scan more than 200 stocks at once. This would allow me to be more picky with indicators as there would be way more stocks
+         to choose from. However, the Alpaca API only takes 200 stocks at a time - I'd either need a triple for loop (unless I restructured
+         the way I'm scraping completely), or I'd need to use another API that allows me to scrape other stocks. This is more of a long-term goal
+         that I'll pursue once I know everything else is very solid.
+
+1.3.1 initially tested on 9/13/2020
+  - Fixed an issue where the bot would try to buy more stocks than it could (given my buying power)
+    - Variable called "equity_limit" is meant to ensure I have the same ratio of ownership of each stock - sometimes this was higher
+    than my buying power, so I needed to add an extra check to make sure I can afford what I am requesting.
+    - I might be able to take this out given the following:
+  - Another for loop added before placing orders to ensure DataFrame only has stocks that I can afford
+
+1.4.1 initially tested on 9/17/2020
+  - I'm giving the bot too much leeway to day trade and I'm hitting my weekly limit. I'm going to try trading mainly on aspects of the stock other than
+  current price in an attempt to have the bot make more long-term decisions. I also changed some of the buying and selling criteria as follows:
+  *BUYING*
+  - Short term SMA has to hold above long term SMA for three days (previously two)
+  - RSI has to be less than 70 (not overbought)
+  *SELLING*
+  - RSI rises above 70
+  - Close holds below short term SMA line for two days and close reaches 75% of resistance line
+  - Close goes below long term SMA line once
+
+  1.4.2 - 9/22/2020 - code/comment cleanup and initial push to Github
