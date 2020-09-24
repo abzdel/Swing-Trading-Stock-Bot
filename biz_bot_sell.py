@@ -115,32 +115,32 @@ df = df.merge(current_holdings_df, on='symbol', how='outer')
 
 
 ##################################################-CALCULATE PIVOT POINT AND RESISTANCE LEVEL-##################################################
-df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
-df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
-df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
+df['pivot_point'] = (df['high'] + df['low'] + df['close'])/3
+df['r1'] = (2*df['pivot_point']) - df['low']
+df['s1'] = (2*df['pivot_point']) - df['high']
 df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
+df['take_profit'] = ((df['r2'] - df['current_price'])*.75) + df['current_price']
 
 
 ##################################################-CRITERIA FOR SELLING-##################################################
 sell_df = df.loc[
 
-
                         ##########-(RSI > 70)-##########
                         (df['rsi'] > 70)
 
-                        ##########-CLOSE HOLDS BELOW SMA LINE-##########
-                    |   ((df['close'].shift(1) < df['sma10'].shift(1)) & (df['close'] < df['sma10'])
+                        ##########-CLOSE HOLDS BELOW SMA10 LINE-##########
+                    |   (
+                        (df['close'].shift(1) < df['sma10'].shift(1)) & (df['close'] < df['sma10'])
+                        )
 
                         ##########-CURRENT PRICE OR CLOSE REACHES 75% OF RESISTANCE LEVEL 2-##########
-                    |   (((df['current_price']) >= (.75*df['r2'])) | ((df['close']) >= (.75*df['r2'])))
+                    |   (df['current_price'] >= df['take_profit'])
+
 
                         ##########-CLOSE DIPS BELOW LONG-TERM SMA-##########
-                    |   (df['close'] < df['sma200']))
-
-                    # future idea - keep stock if the RSI is under 30 - will see how the current system works first
+                    |   (df['close'] < df['sma200'])
 
                     ]
-
 
 ##################################################-SELL STOCKS-##################################################
 if sell_df.empty == False: # if there are stocks to sell

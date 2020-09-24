@@ -29,7 +29,7 @@ for stock in buy_stocks:
 ##################################################-BUY STOCKS-##################################################
 while True: # will break when I don't want the bot to buy more stocks
     account = api.get_account() # refresh account info
-
+    portfolio = api.list_positions()
     if buy_stocks_list: # check if there are stocks to buy
 
         for stock in buy_stocks_list:
@@ -40,7 +40,7 @@ while True: # will break when I don't want the bot to buy more stocks
             """
             barset = api.get_barset(stock, '1Min', limit=1)
             stock_price = barset[stock][0].c #get current price
-            equity_limit = 1000 # maximum equity you want to own of each stock
+            equity_limit = 600 # maximum equity you want to own of each stock
             buy_qty = 0
 
             while equity_limit > stock_price:

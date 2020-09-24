@@ -69,10 +69,17 @@ df['rsi'] = ta.momentum.rsi(df.close, n=6, fillna=False) # btalib rsi not workin
 
 
 ##################################################-CALCULATE PIVOT POINT AND RESISTANCE LEVEL-##################################################
-df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
-df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
-df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
+# df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
+# df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
+# df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
+# df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
+
+
+df['pivot_point'] = (df['high'] + df['low'] + df['close'])/3
+df['r1'] = (2*df['pivot_point']) - df['low']
+df['s1'] = (2*df['pivot_point']) - df['high']
 df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
+df['take_profit'] = ((df['r2'] - df['close'])*.75) + df['close']
 # for now, we will just trade on these levels
 # if more are needed, they can be found and explained here:
 # https://www.daytrading.com/pivot-points#:~:text=Calculation%20of%20Pivot%20Points,-Pivots%20points%20can&text=The%20central%20price%20level%20%E2%80%93%20the,or%20period%2C%20more%20generally).&text=Resistance%201%20%3D%20(2%20x%20Pivot,)%20%E2%80%93%20High%20(previous%20period)
@@ -180,39 +187,39 @@ big_money_df.loc[:, 'above_sma10'] = (big_money_df['close'] > big_money_df['sma1
 # print(big_money_df['above_sma5'].value_counts())
 # first value should match the true values
 
-buy_stocks = (big_money_df.loc[( # this is a filtered dataframe to give us stocks we want based on various criteria
+buy_stocks = big_money_df.loc[
 
-                    ##########-CHECK IF SMA LINE HAS BEEN CROSSED-##########
-                    # three days ago, the price action was below the SMA line
-                    # two days ago and yesterday, the price action was above the SMA line
-                    # we want to know if the price action has held above the SMA line for two days in a row after being below it
-                    (
-                      (big_money_df['above_sma10'].shift(3) == False) # below SMA 3 days ago
-                    & (big_money_df['above_sma10'].shift(2) == True) # above SMA 2 days ago
-                    & (big_money_df['above_sma10']).shift(1) == True) # above SMA yesterday
-                    & ((big_money_df['above_sma10']) == True) | (big_money_df['low'] > big_money_df['sma10']) # above SMA today
-                    )
+                            ##########-RSI LESS THAN 70-##########
+                            (big_money_df['rsi'] < 70)
 
-                    ##########-ONLY RETURN RECORDS FROM TODAY-##########
-                    # will show which stocks are a buy as of today
-                    & ((big_money_df['time']==today)
 
-                    ##########-RSI LESS THAN 70-##########
-                    # an RSI > 70 means a stock is overbought and will likely fall in price - let's filter these stocks out
-                    & ((big_money_df['rsi'] < 70))
+                            ##########-CHECK IF SMA LINE HAS BEEN CROSSED-##########
+                            # three days ago, the price action was below the SMA line
+                            # two days ago and yesterday, the price action was above the SMA line
+                            # we want to know if the price action has held above the SMA line for two days in a row after being below it
+                            & (big_money_df['above_sma10'].shift(3) == False) # below SMA 3 days ago
+                            & (big_money_df['above_sma10'].shift(2) == True) # above SMA 2 days ago
+                            & (big_money_df['above_sma10'].shift(1) == True) # above SMA yesterday
+                            & (big_money_df['above_sma10'] == True) # above SMA today
+                            & (big_money_df['close'].shift(1) > big_money_df['sma200'])
 
-                    ##########-CHECK IF SHORT TERM SMA > LONG TERM SMA FOR THREE DAYS-##########
-                    # indicates longer term price trend strength
-                    & ((big_money_df['sma10'] > big_money_df['sma200']) # today
-                    & (big_money_df['sma10'].shift(1) > big_money_df['sma200'].shift(1))) # yesterday
-                    & (big_money_df['sma10'].shift(2) > big_money_df['sma200'].shift(2))) # two days ago
 
-                    ])
+                            ##########-CHECK IF SHORT TERM SMA > LONG TERM SMA FOR THREE DAYS-##########
+                            & (big_money_df['sma10'] > big_money_df['sma200']) # today
+                            & (big_money_df['sma10'].shift(1) > big_money_df['sma200'].shift(1)) # yesterday
+                            & (big_money_df['sma10'].shift(2) > big_money_df['sma200'].shift(2)) # two days ago
+
+
+                            ##########-ONLY RETURN RECORDS FROM TODAY-##########
+                            & (big_money_df['time']==today)
+
+                                ]
 
 
 buy_stocks = buy_stocks.sort_values(by=['rsi']) # sort values by RSI
+
 # print('these are the best stocks to buy, if available:')
-# print(buy_stocks[['symbol', 'close', 'sma5', 'sma10', 'sma200', 'rsi']])
+#print(buy_stocks[['symbol', 'close', 'sma10', 'sma200', 'r2', 'rsi']])
 
 
 """

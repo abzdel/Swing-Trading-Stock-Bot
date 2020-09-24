@@ -119,3 +119,5 @@ New version - initially tested on 8/25/2020: (version 1.1.1)
   - Close goes below long term SMA line once
 
   1.4.2 - 9/22/2020 - code/comment cleanup and initial push to Github
+
+  1.4.3 - 9/24/2020 - resistance level calculation bug fix, fixed buying criteria logic
