@@ -10,12 +10,10 @@ print('${} is available as buying power.'.format(account.buying_power)) # check 
 
 
 ##################################################-FINAL CRITERIA FOR BUYING-##################################################
-current_holdings = [] # create empty list - will add stocks to it if bought - might not need if portfolio account variable in sell script updates fast enough
-
 print('these are the best stocks to buy, if available:')
 print(bb1.buy_stocks[['symbol', 'close', 'sma10', 'sma200', 'rsi']])
 buy_stocks = bb1.buy_stocks['symbol'].tolist() # create a list of the stocks above
-buy_stocks_list = [] # create empty list
+buy_stocks_list = [] # final buy list
 
 for stock in buy_stocks:
     # we want to ensure we can afford each stock on our buy list

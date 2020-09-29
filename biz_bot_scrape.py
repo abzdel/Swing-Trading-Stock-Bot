@@ -69,17 +69,12 @@ df['rsi'] = ta.momentum.rsi(df.close, n=6, fillna=False) # btalib rsi not workin
 
 
 ##################################################-CALCULATE PIVOT POINT AND RESISTANCE LEVEL-##################################################
-# df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
-# df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
-# df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
-# df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
-
-
-df['pivot_point'] = (df['high'] + df['low'] + df['close'])/3
-df['r1'] = (2*df['pivot_point']) - df['low']
-df['s1'] = (2*df['pivot_point']) - df['high']
+df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
+df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
+df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
 df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
-df['take_profit'] = ((df['r2'] - df['close'])*.75) + df['close']
+df['take_profit'] = ((df['r2'] - df['close'].shift(1))*.75) + df['close'].shift(1)
+
 # for now, we will just trade on these levels
 # if more are needed, they can be found and explained here:
 # https://www.daytrading.com/pivot-points#:~:text=Calculation%20of%20Pivot%20Points,-Pivots%20points%20can&text=The%20central%20price%20level%20%E2%80%93%20the,or%20period%2C%20more%20generally).&text=Resistance%201%20%3D%20(2%20x%20Pivot,)%20%E2%80%93%20High%20(previous%20period)

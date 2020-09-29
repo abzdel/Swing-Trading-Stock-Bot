@@ -29,7 +29,7 @@ for stock in portfolio:
     holding_qty.append(temp2)
     temp3 = re.search(r"(('market_value': '))+((\w+))",str(portfolio[i])).group(3)
     equity_owned.append(temp3)
-    temp4 = re.search(r"(('current_price': '))+((\w+))",str(portfolio[i])).group(3)
+    temp4 = re.search(r"(('current_price': '))+((\w+\.+\w+))",str(portfolio[i])).group(3) # fixed decimal issue here
     current_price.append(temp4)
     i+=1
 
@@ -93,6 +93,14 @@ df['close'] = close_list
 df['volume'] = volume_list
 
 
+##################################################-CALCULATE PIVOT POINT AND RESISTANCE LEVEL-##################################################
+df['pivot_point'] = (df['high'].shift(1) + df['low'].shift(1) + df['close'].shift(1))/3
+df['r1'] = (2*df['pivot_point']) - df['low'].shift(1)
+df['s1'] = (2*df['pivot_point']) - df['high'].shift(1)
+df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
+df['take_profit'] = ((df['r2'] - df['close'].shift(1))*.75) + df['close'].shift(1)
+
+
 ##################################################-ADDING IN INDICATORS-##################################################
 sma2 = btalib.sma(df, period=2)
 df['sma2']=sma2.df
@@ -112,14 +120,6 @@ today = str(date.today())
 df = df.loc[df['time']==today] # we only want today's records
 
 df = df.merge(current_holdings_df, on='symbol', how='outer')
-
-
-##################################################-CALCULATE PIVOT POINT AND RESISTANCE LEVEL-##################################################
-df['pivot_point'] = (df['high'] + df['low'] + df['close'])/3
-df['r1'] = (2*df['pivot_point']) - df['low']
-df['s1'] = (2*df['pivot_point']) - df['high']
-df['r2'] = (df['pivot_point'] - df['s1']) + (df['r1'])
-df['take_profit'] = ((df['r2'] - df['current_price'])*.75) + df['current_price']
 
 
 ##################################################-CRITERIA FOR SELLING-##################################################
