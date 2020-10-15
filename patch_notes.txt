@@ -121,3 +121,8 @@ New version - initially tested on 8/25/2020: (version 1.1.1)
   1.4.2 - 9/22/2020 - code/comment cleanup and initial push to Github
 
   1.4.3 - 9/24/2020 - resistance level calculation bug fix, fixed buying criteria logic
+
+
+  1.4.4 - 10/14/2020 - first launched on live trading!
+    - added a construct that prevents stocks from being bought if they are already owned
+    - now pulling the current holdings data straight from the portfolio dictionary rather than from regular expressions

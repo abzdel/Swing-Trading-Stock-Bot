@@ -5,6 +5,11 @@ import warnings
 from pandas.core.common import SettingWithCopyWarning
 import alpaca_trade_api as tradeapi
 
+##################################################-SETUP-##################################################
+api = tradeapi.REST(config.APCA_API_KEY_ID, config.APCA_API_SECRET_KEY, config.APCA_API_BASE_URL) # set URLs
+portfolio = api.list_positions()
+
+
 ##################################################-GET LIST OF SYMBOLS-##################################################
 holdings=open('data/holdings.csv').readlines() # read csv of QQQ holdings - should be able to use any csv
 #holdings=open('data/WILSHIRE-5000-Stock-Tickers-List.csv').readlines() # read csv of Wilshire 5000 - not using right now as I can only pass in 200 symbols
@@ -78,7 +83,6 @@ df['take_profit'] = ((df['r2'] - df['close'].shift(1))*.75) + df['close'].shift(
 # for now, we will just trade on these levels
 # if more are needed, they can be found and explained here:
 # https://www.daytrading.com/pivot-points#:~:text=Calculation%20of%20Pivot%20Points,-Pivots%20points%20can&text=The%20central%20price%20level%20%E2%80%93%20the,or%20period%2C%20more%20generally).&text=Resistance%201%20%3D%20(2%20x%20Pivot,)%20%E2%80%93%20High%20(previous%20period)
-
 
 ##################################################-ADDING IN TIME-##################################################
 # add in time - make sure the bot is not trying to trade based on the price of non-trading days
@@ -208,13 +212,29 @@ buy_stocks = big_money_df.loc[
                             ##########-ONLY RETURN RECORDS FROM TODAY-##########
                             & (big_money_df['time']==today)
 
+                            ##########-CLOSE IS LESS THAN RESISTANCE LEVEL 2-##########
+                            & (big_money_df['close'].shift(1) <=big_money_df['r2'])
+
+                            & (big_money_df['close'].shift(1) <= big_money_df['take_profit']) # CURRENT PRICE REACHES 75% OF RESISTANCE LEVEL 2 - NOT CURRENTLY USING
+
+
                                 ]
 
 
 buy_stocks = buy_stocks.sort_values(by=['rsi']) # sort values by RSI
 
+# don't buy more of a stock that we already own our desired equity of
+my_symbols = []
+for symbol in portfolio:
+    my_symbols.append(symbol.symbol)
+
+buy_stocks = buy_stocks[~buy_stocks.symbol.isin(my_symbols)]
+
+#print(buy_stocks[['symbol', 'close', 'sma10', 'above_sma10', 'rsi']])
 # print('these are the best stocks to buy, if available:')
 #print(buy_stocks[['symbol', 'close', 'sma10', 'sma200', 'r2', 'rsi']])
+#print(buy_stocks[['symbol', 'close', 'take_profit', 'r2']])
+
 
 
 """

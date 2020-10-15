@@ -20,17 +20,13 @@ holding_qty = []
 equity_owned = []
 current_price = []
 
-# regular expression to pull symbol, quantity, market value, and current price out of portfolio object
+# loop used for getting data about currently owned stocks
 i=0 # used for indexing each item in our portfolio - will increase with each iteration of the loop
 for stock in portfolio:
-    temp = re.search(r"(('symbol': '))+((\w+))",str(portfolio[i])).group(3)
-    current_holdings.append(temp)
-    temp2 = re.search(r"(('qty': '))+((\w+))",str(portfolio[i])).group(3)
-    holding_qty.append(temp2)
-    temp3 = re.search(r"(('market_value': '))+((\w+))",str(portfolio[i])).group(3)
-    equity_owned.append(temp3)
-    temp4 = re.search(r"(('current_price': '))+((\w+\.+\w+))",str(portfolio[i])).group(3) # fixed decimal issue here
-    current_price.append(temp4)
+    current_holdings.append(portfolio[i].symbol)
+    holding_qty.append(portfolio[i].qty)
+    equity_owned.append(portfolio[i].market_value)
+    current_price.append(portfolio[i].current_price)
     i+=1
 
 # append each list to our dataframe
@@ -119,7 +115,7 @@ df['rsi'] = ta.momentum.rsi(df.close, n=6, fillna=False) # btalib rsi not workin
 today = str(date.today())
 df = df.loc[df['time']==today] # we only want today's records
 
-df = df.merge(current_holdings_df, on='symbol', how='outer')
+df = df.merge(current_holdings_df, on='symbol', how='inner')
 
 
 ##################################################-CRITERIA FOR SELLING-##################################################
@@ -133,14 +129,16 @@ sell_df = df.loc[
                         (df['close'].shift(1) < df['sma10'].shift(1)) & (df['close'] < df['sma10'])
                         )
 
-                        ##########-CURRENT PRICE OR CLOSE REACHES 75% OF RESISTANCE LEVEL 2-##########
-                    |   (df['current_price'] >= df['take_profit'])
+                        ##########-CURRENT PRICE REACHES RESISTANCE LEVEL 2-##########
+                    |   (df['current_price'] >= df['take_profit']) # CURRENT PRICE REACHES 75% OF RESISTANCE LEVEL 2 - NOT CURRENTLY USING
+                #    | (df['current_price'] >=df['r2'])
 
 
                         ##########-CLOSE DIPS BELOW LONG-TERM SMA-##########
                     |   (df['close'] < df['sma200'])
 
                     ]
+
 
 ##################################################-SELL STOCKS-##################################################
 if sell_df.empty == False: # if there are stocks to sell

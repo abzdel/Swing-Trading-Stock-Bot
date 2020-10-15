@@ -23,6 +23,8 @@ for stock in buy_stocks:
     if stock_price < float(account.buying_power): # check if the stock's price is less than our buying power
         buy_stocks_list.append(stock)
 
+# might add current price scraper here if needed
+
 
 ##################################################-BUY STOCKS-##################################################
 while True: # will break when I don't want the bot to buy more stocks
@@ -61,7 +63,6 @@ while True: # will break when I don't want the bot to buy more stocks
                     time_in_force='gtc'
                 )
                 print(f'{buy_qty} shares of {stock} will be bought')
-
             except (tradeapi.rest.APIError):
                 print("Insufficient buying power for best available stocks")
                 break
